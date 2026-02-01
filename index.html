@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Core AI | Pro Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { background-color: #0b0f1a; color: #e2e8f0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .input-field { background: #161e2d !important; border: 1px solid #2d3748 !important; color: #fff !important; }
+        .progress-bar { transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        #login-screen { transition: all 0.6s ease-in-out; }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+    <div id="login-screen" class="fixed inset-0 z-[100] bg-[#0b0f1a] flex items-center justify-center p-4">
+        <div class="glass p-10 rounded-[2.5rem] w-full max-w-sm text-center border-t-4 border-indigo-600 shadow-2xl">
+            <h2 class="text-2xl font-black mb-1 tracking-tighter text-indigo-400">FINANCE CORE AI</h2>
+            <p class="text-[10px] uppercase font-bold text-slate-500 mb-8 tracking-widest">Acesso do Analista</p>
+            <div class="space-y-4">
+                <input type="text" id="user" placeholder="Usuário" class="input-field w-full p-4 rounded-2xl font-bold focus:ring-2 ring-indigo-500 outline-none">
+                <input type="password" id="pass" placeholder="Senha" class="input-field w-full p-4 rounded-2xl font-bold focus:ring-2 ring-indigo-500 outline-none">
+                <button onclick="tentarLogin()" class="w-full bg-indigo-600 hover:bg-indigo-500 p-4 rounded-2xl font-black transition-all uppercase text-xs tracking-widest text-white">Entrar no Terminal</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-content" class="hidden opacity-0 transition-opacity duration-1000 max-w-7xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-end mb-10 gap-4">
+            <div>
+                <h1 class="text-3xl font-black tracking-tighter text-white">FINANCE CORE AI</h1>
+                <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold">Análise de Risco & Gestão Estratégica</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Analista: <span id="user-display" class="text-indigo-400 font-black">---</span></p>
+                <div class="flex items-center justify-end gap-2">
+                    <span class="text-emerald-400 text-[10px] font-black uppercase">Sistema Operacional</span>
+                    <div class="h-2 w-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                </div>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <aside class="lg:col-span-4 space-y-6">
+                <div class="glass p-8 rounded-[2.5rem] relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-600/10 blur-3xl"></div>
+                    <h2 class="text-sm font-bold text-white mb-6 uppercase tracking-widest border-l-4 border-indigo-600 pl-3">Simulador de Risco</h2>
+                    <div class="space-y-4">
+                        <div><label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Idade</label>
+                        <input type="number" id="idade" class="input-field w-full p-4 rounded-xl font-bold" value="30"></div>
+                        <div><label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Renda Mensal (R$)</label>
+                        <input type="number" id="renda" class="input-field w-full p-4 rounded-xl font-bold" value="5000"></div>
+                        <div><label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Dívidas Ativas (R$)</label>
+                        <input type="number" id="divida" class="input-field w-full p-4 rounded-xl font-bold text-rose-400" value="1500"></div>
+                        <div><label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Score de Crédito</label>
+                        <input type="number" id="score" class="input-field w-full p-4 rounded-xl font-bold text-indigo-400" value="720"></div>
+                        <div><label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Prazo de Amortização</label>
+                        <select id="prazo" class="input-field w-full p-4 rounded-xl font-bold">
+                            <option value="36">36 Meses</option>
+                            <option value="48">48 Meses</option>
+                        </select></div>
+                        <button onclick="analisar()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-5 rounded-2xl font-black uppercase text-[11px] transition-all shadow-lg shadow-indigo-600/20">Processar Análise</button>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="lg:col-span-8 space-y-8">
+                <div id="painel-resultado" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass p-8 rounded-[2rem] border-l-[12px] transition-all" id="card-status">
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Veredito do Sistema</p>
+                        <h3 id="res-status" class="text-2xl font-black mt-2 leading-tight">Aguardando...</h3>
+                        <p id="res-classe" class="text-xs font-bold opacity-60 mt-1 uppercase tracking-tighter"></p>
+                    </div>
+                    <div class="glass p-8 rounded-[2rem]">
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Limite Máximo Disponível</p>
+                        <h3 id="res-limite" class="text-4xl font-black text-emerald-400 mt-2">R$ 0,00</h3>
+                        <p class="text-[9px] text-slate-500 mt-2 font-bold uppercase tracking-widest">Taxa Aplicada: 1.75% a.m.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="glass p-6 rounded-[2.5rem]">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Matriz de Risco (Radar)</p>
+                        <div id="chart-radar" style="height: 300px;"></div>
+                    </div>
+                    <div class="glass p-6 rounded-[2.5rem]">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mb-4 tracking-widest">Benchmark do Mercado</p>
+                        <div id="chart-barras" style="height: 300px;"></div>
+                    </div>
+                </div>
+
+                <div class="glass p-8 rounded-[2.5rem]">
+                    <h4 class="text-xs font-black text-white/50 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+                        <span class="w-2 h-2 bg-indigo-500 rounded-full animate-ping"></span>
+                        Diagnóstico de Comprometimento de Renda
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-end">
+                                <p class="text-[10px] font-black text-slate-500 uppercase">Impacto Atual</p>
+                                <span id="det-ativa-pct" class="text-xs font-black text-amber-500">0%</span>
+                            </div>
+                            <h4 id="det-ativa-rs" class="text-2xl font-bold text-white">R$ 0,00</h4>
+                            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                <div id="bar-ativa" class="progress-bar bg-amber-500 h-full w-0 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-end">
+                                <p class="text-[10px] font-black text-slate-500 uppercase">Novo Impacto</p>
+                                <span id="det-nova-pct" class="text-xs font-black text-indigo-500">0%</span>
+                            </div>
+                            <h4 id="det-nova-rs" class="text-2xl font-bold text-white">R$ 0,00</h4>
+                            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                                <div id="bar-nova" class="progress-bar bg-indigo-500 h-full w-0 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 bg-slate-800/40 p-5 rounded-3xl border border-white/5">
+                            <div class="flex justify-between items-end">
+                                <p class="text-[10px] font-black text-white/40 uppercase">Exposição Total</p>
+                                <span id="det-total-pct" class="text-sm font-black text-emerald-400">0%</span>
+                            </div>
+                            <h4 id="det-total-rs" class="text-2xl font-bold text-white">R$ 0,00</h4>
+                            <div class="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden">
+                                <div id="bar-total" class="progress-bar bg-emerald-500 h-full w-0 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="mt-20 py-10 text-center border-t border-white/5">
+            <p class="text-[9px] font-bold uppercase tracking-[0.5em] text-slate-600">
+                AI Driven Risk Management System &bull; <span class="text-indigo-400">DEVELOPED BY JOAOGPEREIRA006</span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        const API = "http://127.0.0.1:8000";
+
+        async function tentarLogin() {
+            const u = document.getElementById('user').value;
+            const p = document.getElementById('pass').value;
+            try {
+                const res = await fetch(`${API}/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({usuario: u, senha: p})
+                });
+                const data = await res.json();
+                if(data.auth) {
+                    document.getElementById('user-display').innerText = data.nome;
+                    document.getElementById('login-screen').classList.add('opacity-0', 'pointer-events-none');
+                    setTimeout(() => {
+                        document.getElementById('login-screen').style.display = 'none';
+                        document.getElementById('app-content').classList.remove('hidden');
+                        setTimeout(() => document.getElementById('app-content').classList.add('opacity-100'), 50);
+                        carregarBase();
+                    }, 600);
+                } else { alert("Acesso Negado: Credenciais Inválidas"); }
+            } catch(e) { alert("Erro de Conexão: O servidor FastAPI está rodando?"); }
+        }
+
+        async function carregarBase() {
+            try {
+                const res = await fetch(`${API}/resumo`);
+                const dados = await res.json();
+                const cats = Object.keys(dados);
+
+                Plotly.newPlot('chart-barras', [{
+                    x: cats,
+                    y: cats.map(c => dados[c].divida_pendente),
+                    type: 'bar',
+                    marker: { color: '#6366f1', radius: 10 }
+                }], {
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                    font: { color: '#64748b', size: 9 },
+                    margin: { t: 10, b: 30, l: 30, r: 10 },
+                    xaxis: { gridcolor: '#1e293b' },
+                    yaxis: { gridcolor: '#1e293b' }
+                });
+                atualizarRadar("#6366f1");
+            } catch (e) { console.error("Falha ao carregar benchmarks."); }
+        }
+
+        async function analisar() {
+            const params = new URLSearchParams({
+                idade: document.getElementById('idade').value,
+                renda_mensal: document.getElementById('renda').value,
+                divida: document.getElementById('divida').value,
+                score_usuario: document.getElementById('score').value,
+                n_parcelas: document.getElementById('prazo').value
+            });
+
+            const res = await fetch(`${API}/simular-complexo?${params}`);
+            const data = await res.json();
+
+            // Veredito
+            document.getElementById('res-status').innerText = data.status;
+            document.getElementById('res-status').style.color = data.cor;
+            document.getElementById('card-status').style.borderColor = data.cor;
+            document.getElementById('res-classe').innerText = `Rating: ${data.classe}`;
+            document.getElementById('res-limite').innerText = `R$ ${data.limite_maximo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+
+            // Métricas de Impacto (LOGICA: Quanto ele paga vs quanto pagaria)
+            const det = data.dados_detalhados;
+            
+            // Dívida Atual
+            document.getElementById('det-ativa-rs').innerText = `R$ ${det.p_ativa.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('det-ativa-pct').innerText = `${det.pct_ativa}%`;
+            document.getElementById('bar-ativa').style.width = `${det.pct_ativa * 3.33}%`; // Escala sobre o teto de 30%
+
+            // Novo Crédito
+            document.getElementById('det-nova-rs').innerText = `R$ ${det.p_nova.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('det-nova-pct').innerText = `${det.pct_nova}%`;
+            document.getElementById('bar-nova').style.width = `${det.pct_nova * 3.33}%`;
+
+            // Total Consolidado (FIX: undefined% removido)
+            document.getElementById('det-total-rs').innerText = `R$ ${det.total_rs.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+            document.getElementById('det-total-pct').innerText = `${data.total_comprometido}%`;
+            
+            const barTotal = document.getElementById('bar-total');
+            const pctTotal = data.total_comprometido;
+            barTotal.style.width = `${Math.min((pctTotal / 30) * 100, 100)}%`;
+            barTotal.className = pctTotal > 30 ? "progress-bar bg-rose-500 h-full" : "progress-bar bg-emerald-500 h-full";
+
+            atualizarRadar(data.cor);
+        }
+
+        function atualizarRadar(cor) {
+            const score = document.getElementById('score').value / 10;
+            const r = [score, 75, 80, 70, score];
+            Plotly.newPlot('chart-radar', [{
+                type: 'scatterpolar',
+                r: r,
+                theta: ['Crédito','Liquidez','Estabilidade','Renda','Crédito'],
+                fill: 'toself',
+                fillcolor: cor + '22',
+                line: { color: cor, width: 4 }
+            }], {
+                polar: { bgcolor: 'rgba(0,0,0,0)', radialaxis: {visible: false, range: [0, 100]}, angularaxis: {color: '#475569', font: {size: 10}} },
+                paper_bgcolor: 'rgba(0,0,0,0)', showlegend: false, margin: {t:40, b:40, l:40, r:40}
+            });
+        }
+    </script>
+</body>
+</html>
