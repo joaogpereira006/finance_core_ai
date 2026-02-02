@@ -23,7 +23,7 @@ class LoginDados(BaseModel):
     usuario: str
     senha: str
 
-df_api = pd.read_csv('dados_limpos.csv')
+df_api = pd.read_csv('dados_limpos.zip')
 
 @app.post("/login")
 def login(dados: LoginDados):
@@ -94,4 +94,5 @@ def simular_complexo(idade: int, renda_mensal: float, divida: float, score_usuar
             "pct_nova": round(perc_nova, 1),
             "total_rs": round(parcela_ativa + parcela_simulada, 2)
         }
+
     }
