@@ -144,7 +144,8 @@
     </div>
 
     <script>
-        const API = "http://127.0.0.1:8000";
+        // CORREÇÃO AQUI: Detecta automaticamente a URL do servidor (seja localhost ou Render)
+        const API = window.location.origin;
 
         async function tentarLogin() {
             const u = document.getElementById('user').value;
@@ -201,39 +202,38 @@
                 n_parcelas: document.getElementById('prazo').value
             });
 
-            const res = await fetch(`${API}/simular-complexo?${params}`);
-            const data = await res.json();
+            try {
+                const res = await fetch(`${API}/simular-complexo?${params}`);
+                const data = await res.json();
 
-            // Veredito
-            document.getElementById('res-status').innerText = data.status;
-            document.getElementById('res-status').style.color = data.cor;
-            document.getElementById('card-status').style.borderColor = data.cor;
-            document.getElementById('res-classe').innerText = `Rating: ${data.classe}`;
-            document.getElementById('res-limite').innerText = `R$ ${data.limite_maximo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                // Veredito
+                document.getElementById('res-status').innerText = data.status;
+                document.getElementById('res-status').style.color = data.cor;
+                document.getElementById('card-status').style.borderColor = data.cor;
+                document.getElementById('res-classe').innerText = `Rating: ${data.classe}`;
+                document.getElementById('res-limite').innerText = `R$ ${data.limite_maximo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
 
-            // Métricas de Impacto (LOGICA: Quanto ele paga vs quanto pagaria)
-            const det = data.dados_detalhados;
-            
-            // Dívida Atual
-            document.getElementById('det-ativa-rs').innerText = `R$ ${det.p_ativa.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('det-ativa-pct').innerText = `${det.pct_ativa}%`;
-            document.getElementById('bar-ativa').style.width = `${det.pct_ativa * 3.33}%`; // Escala sobre o teto de 30%
+                // Métricas de Impacto
+                const det = data.dados_detalhados;
+                
+                document.getElementById('det-ativa-rs').innerText = `R$ ${det.p_ativa.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('det-ativa-pct').innerText = `${det.pct_ativa}%`;
+                document.getElementById('bar-ativa').style.width = `${Math.min(det.pct_ativa * 3.33, 100)}%`;
 
-            // Novo Crédito
-            document.getElementById('det-nova-rs').innerText = `R$ ${det.p_nova.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('det-nova-pct').innerText = `${det.pct_nova}%`;
-            document.getElementById('bar-nova').style.width = `${det.pct_nova * 3.33}%`;
+                document.getElementById('det-nova-rs').innerText = `R$ ${det.p_nova.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('det-nova-pct').innerText = `${det.pct_nova}%`;
+                document.getElementById('bar-nova').style.width = `${Math.min(det.pct_nova * 3.33, 100)}%`;
 
-            // Total Consolidado (FIX: undefined% removido)
-            document.getElementById('det-total-rs').innerText = `R$ ${det.total_rs.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('det-total-pct').innerText = `${data.total_comprometido}%`;
-            
-            const barTotal = document.getElementById('bar-total');
-            const pctTotal = data.total_comprometido;
-            barTotal.style.width = `${Math.min((pctTotal / 30) * 100, 100)}%`;
-            barTotal.className = pctTotal > 30 ? "progress-bar bg-rose-500 h-full" : "progress-bar bg-emerald-500 h-full";
+                document.getElementById('det-total-rs').innerText = `R$ ${(det.p_ativa + det.p_nova).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                document.getElementById('det-total-pct').innerText = `${data.total_comprometido}%`;
+                
+                const barTotal = document.getElementById('bar-total');
+                const pctTotal = data.total_comprometido;
+                barTotal.style.width = `${Math.min((pctTotal / 30) * 100, 100)}%`;
+                barTotal.className = pctTotal > 30 ? "progress-bar bg-rose-500 h-full" : "progress-bar bg-emerald-500 h-full";
 
-            atualizarRadar(data.cor);
+                atualizarRadar(data.cor);
+            } catch (e) { alert("Erro ao processar simulação."); }
         }
 
         function atualizarRadar(cor) {
