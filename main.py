@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+import os
 
 app = FastAPI()
 
@@ -11,6 +14,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+async def read_index():
+    # Retorna o arquivo index.html que está na mesma pasta do main.py
+    return FileResponse('index.html')
 
 # BANCO DE DADOS DE USUÁRIOS
 USUARIOS_PERMITIDOS = {
@@ -23,6 +31,7 @@ class LoginDados(BaseModel):
     usuario: str
     senha: str
 
+# Carregamento do arquivo ZIP
 df_api = pd.read_csv('dados_limpos.zip')
 
 @app.post("/login")
@@ -42,7 +51,7 @@ def resumo_estratégico():
 
 @app.get("/simular-complexo")
 def simular_complexo(idade: int, renda_mensal: float, divida: float, score_usuario: int, n_parcelas: int):
-    # Lógica de cálculo corrigida
+    # Lógica de cálculo de comprometimento de renda (máximo 30%)
     if divida <= 10000: prazo_ativa = 36
     elif divida <= 50000: prazo_ativa = 48
     else: prazo_ativa = 60
@@ -52,7 +61,7 @@ def simular_complexo(idade: int, renda_mensal: float, divida: float, score_usuar
     teto_total_mensal = renda_mensal * 0.30
     margem_disponivel = teto_total_mensal - parcela_ativa
     
-    i = 0.0175
+    i = 0.0175 # Taxa de juros simulada
     fator = (i * (1 + i)**n_parcelas) / (((1 + i)**n_parcelas) - 1)
     
     if margem_disponivel <= 0:
@@ -67,6 +76,7 @@ def simular_complexo(idade: int, renda_mensal: float, divida: float, score_usuar
     
     status = "Crédito Liberado"
     cor = "#10b981"
+    # Classificação baseada no Score e Comprometimento
     classe = "ALTO POTENCIAL" if score_usuario > 700 else "MÉDIO RISCO"
 
     if total_comprometido > 30.1:
@@ -94,5 +104,4 @@ def simular_complexo(idade: int, renda_mensal: float, divida: float, score_usuar
             "pct_nova": round(perc_nova, 1),
             "total_rs": round(parcela_ativa + parcela_simulada, 2)
         }
-
     }
